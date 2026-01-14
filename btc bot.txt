@@ -1,0 +1,52 @@
+import schedule
+import time
+import requests
+import telebot
+
+TELEGRAM_TOKEN = "you token in @botfather"
+CHAT_ID = "u token in  @userinfobot"
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+def send_btc_price():
+    try:
+        response = requests.get(
+            'https://api.coingecko.com/api/v3/simple/price',
+            params={'ids': 'bitcoin', 'vs_currencies': 'usd,rub'}
+        )
+        data = response.json()
+        
+        usd_price = data['bitcoin']['usd']
+        rub_price = data['bitcoin']['rub']
+        current_time = time.strftime('%H:%M:%S')
+        
+        message = (
+            f"💰 *Курс Bitcoin*\n"
+            f"🕐 {current_time}\n"
+            f"🇺🇸 ${usd_price:,.2f}\n"
+            f"🇷🇺 ₽{rub_price:,.2f}"
+        )
+        
+        bot.send_message(
+            chat_id=CHAT_ID,
+            text=message,
+            parse_mode='Markdown'
+        )
+        print(f"✅ Отправлено в {current_time}")
+        
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+
+schedule.every(1).minutes.do(send_btc_price)
+
+print("🤖 Бот запущен. Отправка курса каждую минуту...")
+print("Для остановки нажмите Ctrl+C\n")
+
+send_btc_price()
+
+try:
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("\n👋 Бот остановлен")
